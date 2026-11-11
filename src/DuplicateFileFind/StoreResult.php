@@ -1,26 +1,28 @@
 <?php
+declare(strict_types=1);
 
 namespace DuplicateFileFind;
 
 class StoreResult
 {
-    private $path;
+    public const FILE_NAME = 'result.txt';
+
+    private string $file;
 
     public function __construct(string $pathToSave)
     {
-        $this->path = $pathToSave;
+        $this->file = self::filePath($pathToSave);
     }
 
-    public function save(string $data)
+    public static function filePath(string $pathToSave): string
     {
-        $file = $this->path . DIRECTORY_SEPARATOR . 'result.txt';
-        $handle = fopen($file, "w");
-
-        if ($handle === false)
-            throw new \Exception("Error save result file: $file");
-
-        fwrite($handle, $data);
-        fclose($handle);
+        return $pathToSave . DIRECTORY_SEPARATOR . self::FILE_NAME;
     }
 
+    public function save(string $data): void
+    {
+        if (file_put_contents($this->file, $data) === false) {
+            throw new \RuntimeException("Error save result file: {$this->file}");
+        }
+    }
 }
