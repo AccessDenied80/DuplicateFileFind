@@ -1,0 +1,6 @@
+services:
+  app:
+    build: .
+    volumes:
+      # Папка з файлами для пошуку дублікатів; сюди ж пишеться result.txt
+      - ./files:/app/files
