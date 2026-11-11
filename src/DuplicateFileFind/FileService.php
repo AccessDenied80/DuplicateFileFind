@@ -7,25 +7,36 @@ class FileService
 {
     private string $path;
 
-    public function __construct(string $path)
+    /** @var array<string, true> */
+    private array $excludedFiles = [];
+
+    /** @param list<string> $excludedFiles Paths that must not be scanned */
+    public function __construct(string $path, array $excludedFiles = [])
     {
         $this->path = $path;
+
+        foreach ($excludedFiles as $file) {
+            $this->excludedFiles[$file] = true;
+        }
     }
 
-    public function fileArrayList() : array
+    /** @return array<string, int> Path => size in bytes */
+    public function fileArrayList(): array
     {
         $dir = new \DirectoryIterator($this->path);
 
         $fileArrayList = [];
 
-        foreach($dir as $file) {
-            if ($file->isFile() && $file->isReadable()) {
-                $fileArrayList[$file->getPathname()] = $file->getSize();
+        foreach ($dir as $file) {
+            if (!$file->isFile() || !$file->isReadable()) {
+                continue;
             }
-        }
 
-        if (!empty($fileArrayList)) {
-            asort($fileArrayList);
+            if (isset($this->excludedFiles[$file->getPathname()])) {
+                continue;
+            }
+
+            $fileArrayList[$file->getPathname()] = $file->getSize();
         }
 
         return $fileArrayList;
@@ -33,7 +44,12 @@ class FileService
 
     public function hash(string $file): string
     {
-        return hash_file('sha256', $file);
-    }
+        $hash = is_file($file) && is_readable($file) ? hash_file('sha256', $file) : false;
 
+        if ($hash === false) {
+            throw new \RuntimeException("Cannot read file: $file");
+        }
+
+        return $hash;
+    }
 }

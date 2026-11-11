@@ -1,6 +1,14 @@
 services:
   app:
-    build: .
+    build:
+      context: .
+      target: app
     volumes:
       # Папка з файлами для пошуку дублікатів; сюди ж пишеться result.txt
       - ./files:/app/files
+
+  test:
+    build:
+      context: .
+      target: test
+    profiles: [test]
